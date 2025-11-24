@@ -8,7 +8,7 @@ import IoTConnect from './components/IoTConnect';
 import DeFiHub from './components/DeFiHub'; 
 import CommerceHub from './components/CommerceHub'; 
 import ArchitexGo from './components/ArchitexGo'; 
-import ArbitrationCouncil from './components/ArbitrationCouncil'; // New Import
+import ArbitrationCouncil from './components/ArbitrationCouncil'; 
 import { checkTrustline, UtilityContracts, OraclePriceFeed, SecurityContract } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -270,7 +270,7 @@ const App: React.FC = () => {
       case 'VESTING':
         return <VestingVault schedules={vestingData} />;
       case 'SOCIAL':
-        return <SocialFi currentUser={user} />;
+        return <SocialFi currentUser={user} language={currentLang} />;
       case 'IOT':
         return <IoTConnect />;
       case 'DEFI':
