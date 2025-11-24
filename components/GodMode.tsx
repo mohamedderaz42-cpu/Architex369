@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { VestingSchedule, SystemConfig, User, UserRole, Language } from '../types';
-import { mintTokens, burnTokens } from '../services/stellarService';
+import React, { useState, useEffect } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { VestingSchedule, SystemConfig, User, UserRole, Language, MultiSigProposal, TreasuryStats } from '../types';
+import { mintTokens, burnTokens, AdminAccessControl, GodModeRegistry, TreasuryContract } from '../services/stellarService';
 
 interface GodModeProps {
   supply: number;
@@ -11,9 +11,10 @@ interface GodModeProps {
   onConfigChange: (newConfig: SystemConfig) => void;
   users: User[];
   onUpdateRole: (userId: string, newRole: UserRole) => void;
+  currentUser: User;
 }
 
-type Tab = 'ECONOMY' | 'TEAM' | 'SYSTEM' | 'CONTENT';
+type Tab = 'ECONOMY' | 'TEAM' | 'SYSTEM' | 'GOVERNANCE' | 'AUTOMATION';
 
 const GodMode: React.FC<GodModeProps> = ({ 
   supply, 
@@ -22,12 +23,39 @@ const GodMode: React.FC<GodModeProps> = ({
   systemConfig, 
   onConfigChange,
   users,
-  onUpdateRole
+  onUpdateRole,
+  currentUser
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('ECONOMY');
   const [actionAmount, setActionAmount] = useState<number>(0);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<string>('');
+  
+  // Governance State
+  const [proposals, setProposals] = useState<MultiSigProposal[]>([]);
+  
+  // Treasury State (Phase 3)
+  const [treasury, setTreasury] = useState<TreasuryStats | null>(null);
+
+  // Load Data
+  useEffect(() => {
+    if (activeTab === 'GOVERNANCE') {
+        const loadGov = async () => {
+            const prop = await AdminAccessControl.proposeTransaction(currentUser.id, "0x..Config", "setFee", { fee: 0.1 });
+            setProposals([prop]);
+        };
+        loadGov();
+    }
+    if (activeTab === 'AUTOMATION') {
+        const loadTreasury = async () => {
+            const stats = await TreasuryContract.getStats();
+            setTreasury(stats);
+        };
+        loadTreasury();
+        const interval = setInterval(loadTreasury, 5000);
+        return () => clearInterval(interval);
+    }
+  }, [activeTab]);
 
   // --- Economy Handlers ---
   const handleMint = async () => {
@@ -62,6 +90,21 @@ const GodMode: React.FC<GodModeProps> = ({
     }
   };
 
+  // --- Governance Handlers ---
+  const handleSignProposal = async (id: string) => {
+      setProcessing(true);
+      await AdminAccessControl.signProposal(id, currentUser.id);
+      setProposals(prev => prev.map(p => p.id === id ? {...p, approvals: [...p.approvals, currentUser.id]} : p));
+      setProcessing(false);
+  };
+
+  const handleExecuteProposal = async (id: string) => {
+      setProcessing(true);
+      await AdminAccessControl.executeProposal(id);
+      setProposals(prev => prev.map(p => p.id === id ? {...p, status: 'EXECUTED'} : p));
+      setProcessing(false);
+  };
+
   // --- System Handlers ---
   const toggleMaintenance = () => {
     onConfigChange({ ...systemConfig, maintenanceMode: !systemConfig.maintenanceMode });
@@ -74,10 +117,17 @@ const GodMode: React.FC<GodModeProps> = ({
   const toggleLanguage = (lang: Language | null) => {
     onConfigChange({ ...systemConfig, forcedLanguage: lang });
   };
+  
+  const toggleFeeTarget = () => {
+      onConfigChange({ 
+          ...systemConfig, 
+          feeRoutingTarget: systemConfig.feeRoutingTarget === 'TREASURY' ? 'BURN_ADDRESS' : 'TREASURY' 
+      });
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="border-l-4 border-neon-gold bg-slate-900/50 p-6 rounded-r-lg flex justify-between items-center">
+      <div className="border-l-4 border-neon-gold bg-slate-900/50 p-6 rounded-r-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-neon-gold uppercase tracking-widest flex items-center gap-3">
             <i className="fas fa-crown"></i> God Mode
@@ -86,8 +136,8 @@ const GodMode: React.FC<GodModeProps> = ({
             CAUTION: CENTRAL BANK & ADMIN ACCESS. ACTIONS ARE IMMUTABLE.
           </p>
         </div>
-        <div className="flex gap-2">
-          {['ECONOMY', 'TEAM', 'SYSTEM'].map((tab) => (
+        <div className="flex flex-wrap gap-2">
+          {['ECONOMY', 'TEAM', 'SYSTEM', 'GOVERNANCE', 'AUTOMATION'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as Tab)}
@@ -267,6 +317,19 @@ const GodMode: React.FC<GodModeProps> = ({
                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${systemConfig.adsEnabled ? 'left-7' : 'left-1'}`}></div>
                  </button>
                </div>
+               
+               <div className="flex justify-between items-center p-3 bg-slate-900 rounded">
+                 <div>
+                   <div className="font-bold">Fee Routing Target</div>
+                   <div className="text-xs text-slate-500">{systemConfig.feeRoutingTarget === 'TREASURY' ? 'Fees -> Treasury' : 'Fees -> Burn Address'}</div>
+                 </div>
+                 <button 
+                  onClick={toggleFeeTarget}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${systemConfig.feeRoutingTarget === 'TREASURY' ? 'bg-green-500' : 'bg-red-500'}`}
+                 >
+                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${systemConfig.feeRoutingTarget === 'TREASURY' ? 'left-7' : 'left-1'}`}></div>
+                 </button>
+               </div>
              </div>
            </div>
 
@@ -293,6 +356,118 @@ const GodMode: React.FC<GodModeProps> = ({
                </button>
              </div>
            </div>
+        </div>
+      )}
+
+      {activeTab === 'GOVERNANCE' && (
+        <div className="space-y-6">
+            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i className="fas fa-university text-neon-gold"></i> Multi-Sig Proposals
+                </h3>
+                {proposals.length === 0 ? (
+                    <div className="text-slate-500 italic text-center p-8">No active proposals pending.</div>
+                ) : (
+                    <div className="space-y-4">
+                        {proposals.map(prop => (
+                            <div key={prop.id} className="bg-slate-900 border border-slate-700 p-4 rounded-lg flex flex-col md:flex-row justify-between gap-4">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className={`text-xs px-2 py-0.5 rounded ${prop.status === 'ACTIVE' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>{prop.status}</span>
+                                        <span className="text-xs font-mono text-slate-500">{prop.id}</span>
+                                    </div>
+                                    <h4 className="text-white font-bold">{prop.functionName} <span className="text-slate-500 text-sm">on {prop.contract}</span></h4>
+                                    <pre className="text-xs text-slate-400 mt-2 bg-slate-950 p-2 rounded overflow-x-auto">
+                                        {JSON.stringify(prop.payload, null, 2)}
+                                    </pre>
+                                </div>
+                                <div className="flex flex-col gap-2 items-end min-w-[150px]">
+                                    <div className="text-xs text-slate-400">
+                                        Signatures: <span className="text-white font-bold">{prop.approvals.length}/{prop.requiredSignatures}</span>
+                                    </div>
+                                    {prop.status === 'ACTIVE' && (
+                                        <>
+                                            {!prop.approvals.includes(currentUser.id) && (
+                                                <button 
+                                                    onClick={() => handleSignProposal(prop.id)}
+                                                    disabled={processing}
+                                                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold py-2 rounded transition"
+                                                >
+                                                    SIGN
+                                                </button>
+                                            )}
+                                            {prop.approvals.length >= prop.requiredSignatures && (
+                                                <button 
+                                                    onClick={() => handleExecuteProposal(prop.id)}
+                                                    disabled={processing}
+                                                    className="w-full bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-2 rounded transition"
+                                                >
+                                                    EXECUTE
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+      )}
+      
+      {activeTab === 'AUTOMATION' && treasury && (
+        <div className="space-y-6">
+            {/* Treasury Monitor */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-xl border border-neon-gold/30 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <i className="fas fa-landmark text-6xl text-neon-gold"></i>
+                    </div>
+                    <h3 className="text-lg font-bold text-neon-gold mb-1">TREASURY VAULT</h3>
+                    <p className="text-xs text-slate-400 font-mono mb-6">{treasury.address}</p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-900/50 p-3 rounded border border-slate-700">
+                            <div className="text-xs text-slate-500 uppercase">ARTX Holdings</div>
+                            <div className="text-xl font-bold text-white font-mono">{treasury.artxBalance.toLocaleString()}</div>
+                        </div>
+                        <div className="bg-slate-900/50 p-3 rounded border border-slate-700">
+                            <div className="text-xs text-slate-500 uppercase">Pi Holdings</div>
+                            <div className="text-xl font-bold text-white font-mono">{treasury.piBalance.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h3 className="text-lg font-bold text-white mb-4">Financial Flow Logs</h3>
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-700">
+                            <span className="text-sm text-slate-400">Total Fees Collected</span>
+                            <span className="text-white font-mono font-bold">{treasury.collectedFeesTotal.toFixed(4)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-700">
+                            <span className="text-sm text-slate-400">Total Revenue (Pay-to-Load)</span>
+                            <span className="text-white font-mono font-bold">{treasury.revenueTotal.toFixed(2)} Pi</span>
+                        </div>
+                        <div className="mt-4 p-3 bg-slate-900 rounded border border-slate-600 text-xs font-mono text-green-400">
+                            > MONITOR_BOT: Price Stability Check... OK<br/>
+                            > MONITOR_BOT: Fee Routing... ACTIVE<br/>
+                            > SYSTEM: Treasury growing at +1.5% hourly
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+             <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h3 className="text-lg font-bold text-white mb-2">Monitor Bot Log</h3>
+                <div className="h-40 bg-black rounded font-mono text-xs p-4 overflow-y-auto text-slate-300">
+                    <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span> MONITOR_BOT initialized.<br/>
+                    <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span> Connected to OraclePriceFeed.<br/>
+                    <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span> Connected to TreasuryContract.<br/>
+                    <span className="text-green-500">[{new Date().toLocaleTimeString()}]</span> 0.3% Fee detected from Swap TX.<br/>
+                </div>
+             </div>
         </div>
       )}
     </div>

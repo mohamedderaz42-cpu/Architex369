@@ -5,7 +5,8 @@ import GodMode from './components/GodMode';
 import VestingVault from './components/VestingVault';
 import SocialFi from './components/SocialFi';
 import IoTConnect from './components/IoTConnect';
-import { checkTrustline } from './services/stellarService';
+import DeFiHub from './components/DeFiHub'; // New Import
+import { checkTrustline, UtilityContracts, OraclePriceFeed } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
 
@@ -18,14 +19,16 @@ const INITIAL_USER: User = {
   artxBalance: 15000,
   hasTrustline: false,
   kycVerified: true,
-  isPremium: false // Set to true to bypass pay-to-load simulation
+  isPremium: false,
+  stakedAmount: 5000
 };
 
 const INITIAL_CONFIG: SystemConfig = {
   maintenanceMode: false,
   globalAnnouncement: null,
   forcedLanguage: null,
-  adsEnabled: true
+  adsEnabled: true,
+  feeRoutingTarget: 'TREASURY'
 };
 
 const INITIAL_VESTING: VestingSchedule[] = [
@@ -44,6 +47,9 @@ const App: React.FC = () => {
   const [lang, setLang] = useState<Language>('en');
   const [config, setConfig] = useState<SystemConfig>(INITIAL_CONFIG);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Phase 3.3: Monitor Bot State
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   // Language Resolution
   const currentLang = config.forcedLanguage || lang;
@@ -70,12 +76,31 @@ const App: React.FC = () => {
     initAuth();
   }, [user.piWalletAddress, user.isPremium, config.adsEnabled]);
 
+  // Phase 3.3: Treasury Monitor Bot Logic
+  useEffect(() => {
+    const monitorInterval = setInterval(async () => {
+        const oracle = await OraclePriceFeed.getRate('ARTX/Pi');
+        // Simple Logic: Alert if price fluctuates drastically (Simulated)
+        if (oracle.confidence < 0.8) {
+            setAlertMessage("WARNING: Price volatility detected by Treasury Monitor.");
+            setTimeout(() => setAlertMessage(null), 5000);
+        }
+    }, 30000);
+    return () => clearInterval(monitorInterval);
+  }, []);
+
   const handlePayToLoad = async () => {
     try {
       setIsLoading(true);
-      await requestPiPayment(1, "Architex Pro Upgrade");
+      const amount = 1; // 1 Pi
+      // 1. Request Payment
+      await requestPiPayment(amount, "Architex Pro Upgrade");
+      
+      // 2. Route Revenue to Escrow/Treasury (Phase 3.2)
+      await UtilityContracts.depositRevenue(amount);
+
       setUser(prev => ({ ...prev, isPremium: true }));
-      alert("Upgrade Successful! Welcome to Architex Pro.");
+      alert("Upgrade Successful! Revenue routed to Protocol Treasury.");
     } catch (e) {
       alert("Payment Cancelled.");
     } finally {
@@ -121,7 +146,7 @@ const App: React.FC = () => {
                 {user.artxBalance.toLocaleString()} <span className="text-cyan-500 text-lg">ARTX</span>
               </div>
               <div className="text-xs text-slate-500 font-mono mb-4">
-                ≈ {(user.artxBalance * 1.00).toFixed(2)} Pi
+                ≈ {(user.artxBalance * 1.05).toFixed(2)} Pi
               </div>
               <div className="flex gap-2">
                 <button className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 rounded text-sm font-bold transition">{t('send', currentLang)}</button>
@@ -182,6 +207,7 @@ const App: React.FC = () => {
             onConfigChange={setConfig}
             users={usersDb}
             onUpdateRole={updateUserRole}
+            currentUser={user}
           />
         );
       case 'VESTING':
@@ -190,6 +216,8 @@ const App: React.FC = () => {
         return <SocialFi currentUser={user} />;
       case 'IOT':
         return <IoTConnect />;
+      case 'DEFI':
+        return <DeFiHub user={user} onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))} onUpdateStaked={(amt) => setUser(prev => ({...prev, stakedAmount: amt}))} />;
       default:
         return <div>View not implemented</div>;
     }
@@ -198,6 +226,14 @@ const App: React.FC = () => {
   return (
     <div dir={dir} className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-500/30">
       
+      {/* Alert Overlay */}
+      {alertMessage && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 border border-red-500 text-white px-6 py-3 rounded-full shadow-2xl animate-bounce font-bold flex items-center gap-3">
+              <i className="fas fa-exclamation-triangle"></i>
+              {alertMessage}
+          </div>
+      )}
+
       {/* Navbar */}
       <nav className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-slate-800 h-16 flex items-center justify-between px-4 md:px-8">
         <div className="flex items-center gap-3">
@@ -248,6 +284,7 @@ const App: React.FC = () => {
         {/* Sidebar */}
         <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 hidden md:flex flex-col gap-2">
           <MenuButton icon="fa-home" label={t('dashboard', currentLang)} active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
+          <MenuButton icon="fa-coins" label="DeFi Hub" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -264,6 +301,7 @@ const App: React.FC = () => {
         {/* Mobile Navigation Bar */}
          <div className="md:hidden flex overflow-x-auto gap-2 p-2 bg-slate-900 border-b border-slate-800">
             <MobileNavButton icon="fa-home" active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
+            <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
             <MobileNavButton icon="fa-users" active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
             <MobileNavButton icon="fa-vault" active={view === 'VESTING'} onClick={() => setView('VESTING')} />
             <MobileNavButton icon="fa-network-wired" active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -284,6 +322,7 @@ const App: React.FC = () => {
                  view === 'IOT' ? t('iot', currentLang) : 
                  view === 'VESTING' ? t('vestingVault', currentLang) :
                  view === 'SOCIAL' ? t('socialFi', currentLang) :
+                 view === 'DEFI' ? 'DeFi Economy' :
                  t('dashboard', currentLang)}
               </h2>
               <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>
