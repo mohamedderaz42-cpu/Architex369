@@ -1,9 +1,9 @@
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
  * 
- * Implements the logic for the 19 Smart Contracts defined in Phase 2 & 3.
+ * Implements the logic for the 19 Smart Contracts defined in Phase 2, 3 & 4.
  * This simulates the N-Tier architecture interacting with Stellar Soroban RPC.
  */
 
@@ -104,6 +104,23 @@ export const OraclePriceFeed = {
       lastUpdate: Date.now(),
       confidence: 0.99
     };
+  },
+
+  // Phase 4: Price Index History
+  getHistory: async (): Promise<PricePoint[]> => {
+    // Generate mock history
+    const data: PricePoint[] = [];
+    let price = 1.05;
+    const now = Date.now();
+    for (let i = 24; i >= 0; i--) {
+        // Random walk
+        price = price * (1 + (Math.random() * 0.1 - 0.04));
+        data.push({
+            time: new Date(now - i * 3600000).getHours() + ':00',
+            price: Number(price.toFixed(4))
+        });
+    }
+    return data;
   }
 };
 
@@ -177,6 +194,19 @@ export const StakingRewardsContract = {
   getRewards: async (userId: string): Promise<number> => {
     await delay(400);
     return 42.5; // Mock accumulated rewards
+  },
+
+  // Phase 4: Accelerator Subscription
+  subscribeAccelerator: async (userId: string): Promise<Transaction> => {
+    await delay(1500);
+    // In real contract, this would burn ARTX or move to treasury
+    return {
+       id: `tx-sub-${Date.now()}`,
+       type: 'SUBSCRIBE',
+       amount: 50,
+       timestamp: Date.now(),
+       status: 'COMPLETED' 
+    };
   }
 };
 

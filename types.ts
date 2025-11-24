@@ -35,6 +35,7 @@ export interface User {
   kycVerified: boolean;
   isPremium: boolean; // For Pay-to-Load protocol
   stakedAmount: number;
+  acceleratorExpiry: number; // Phase 4: Timestamp for Accelerator Subscription
 }
 
 export interface SocialPost {
@@ -49,7 +50,7 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
@@ -101,6 +102,11 @@ export interface OracleData {
   price: number;
   lastUpdate: number;
   confidence: number;
+}
+
+export interface PricePoint {
+  time: string;
+  price: number;
 }
 
 // 2.5 NativeSwapAMM

@@ -20,7 +20,8 @@ const INITIAL_USER: User = {
   hasTrustline: false,
   kycVerified: true,
   isPremium: false,
-  stakedAmount: 5000
+  stakedAmount: 5000,
+  acceleratorExpiry: 0 // Phase 4
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -56,7 +57,7 @@ const App: React.FC = () => {
   const dir = getDir(currentLang);
 
   // Mock Users Database for God Mode
-  const [usersDb, setUsersDb] = useState<User[]>([INITIAL_USER, { ...INITIAL_USER, id: 'u2', username: 'Trader_Joe', role: UserRole.USER, isPremium: false }]);
+  const [usersDb, setUsersDb] = useState<User[]>([INITIAL_USER, { ...INITIAL_USER, id: 'u2', username: 'Trader_Joe', role: UserRole.USER, isPremium: false, acceleratorExpiry: 0 }]);
 
   // Simulate Pi Network Login & Pay-to-Load Protocol
   useEffect(() => {
@@ -154,6 +155,26 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            {/* Proof of Install (Phase 4) */}
+            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <i className="fas fa-mobile-alt text-6xl text-white"></i>
+                </div>
+                <h3 className="text-slate-400 text-sm font-bold uppercase mb-2">Device Security</h3>
+                <div className="flex items-center gap-3 mb-4">
+                     <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center border border-green-500/50">
+                         <i className="fas fa-check text-green-500 text-xl"></i>
+                     </div>
+                     <div>
+                         <div className="font-bold text-white">Proof of Install</div>
+                         <div className="text-xs text-slate-500">Verified Mobile Integrity</div>
+                     </div>
+                </div>
+                <button disabled className="w-full bg-slate-700/50 text-slate-400 border border-slate-600 py-2 rounded text-xs font-bold cursor-not-allowed">
+                    VERIFIED BADGE ACTIVE
+                </button>
+            </div>
+
             {/* Trustline Status */}
             <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl flex flex-col justify-between">
               <div>
@@ -217,7 +238,14 @@ const App: React.FC = () => {
       case 'IOT':
         return <IoTConnect />;
       case 'DEFI':
-        return <DeFiHub user={user} onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))} onUpdateStaked={(amt) => setUser(prev => ({...prev, stakedAmount: amt}))} />;
+        return (
+            <DeFiHub 
+                user={user} 
+                onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))} 
+                onUpdateStaked={(amt) => setUser(prev => ({...prev, stakedAmount: amt}))}
+                onUpdateAccelerator={(exp) => setUser(prev => ({...prev, acceleratorExpiry: exp}))}
+            />
+        );
       default:
         return <div>View not implemented</div>;
     }
