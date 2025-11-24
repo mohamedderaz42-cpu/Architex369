@@ -252,7 +252,7 @@ export const CommerceContract = {
     await delay(1500);
     const insuranceFee = amount * 0.02; // 2% Shield Fee
     
-    // Deposit Fee to Treasury
+    // Deposit Insurance Fee to Treasury (Linking Phase 5 to Phase 3)
     await TreasuryContract.depositFee('ARTX', insuranceFee);
 
     return {

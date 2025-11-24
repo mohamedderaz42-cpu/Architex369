@@ -450,9 +450,13 @@ const GodMode: React.FC<GodModeProps> = ({
                             <span className="text-sm text-slate-400">Total Revenue (Pay-to-Load)</span>
                             <span className="text-white font-mono font-bold">{treasury.revenueTotal.toFixed(2)} Pi</span>
                         </div>
+                        <div className="flex justify-between items-center pb-2 border-b border-slate-700">
+                             <span className="text-sm text-green-400">Vendor Shield Fund (Est.)</span>
+                             <span className="text-white font-mono font-bold">{(treasury.collectedFeesTotal * 0.15).toFixed(4)} ARTX</span>
+                        </div>
                         <div className="mt-4 p-3 bg-slate-900 rounded border border-slate-600 text-xs font-mono text-green-400">
                             > MONITOR_BOT: Price Stability Check... OK<br/>
-                            > MONITOR_BOT: Fee Routing... ACTIVE<br/>
+                            > COMMERCE_BOT: Vendor Shield Liquidity... OK<br/>
                             > SYSTEM: Treasury growing at +1.5% hourly
                         </div>
                     </div>
@@ -466,6 +470,7 @@ const GodMode: React.FC<GodModeProps> = ({
                     <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span> Connected to OraclePriceFeed.<br/>
                     <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span> Connected to TreasuryContract.<br/>
                     <span className="text-green-500">[{new Date().toLocaleTimeString()}]</span> 0.3% Fee detected from Swap TX.<br/>
+                    <span className="text-green-500">[{new Date().toLocaleTimeString()}]</span> 2.0% Insurance Fee routed from Commerce.<br/>
                 </div>
              </div>
         </div>
