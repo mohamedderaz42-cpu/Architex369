@@ -1,5 +1,5 @@
 
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord, Plugin, PluginCategory } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord, Plugin, PluginCategory, AuditReport, BountySubmission } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -492,7 +492,6 @@ export const SustainabilityContract = {
 export const EcosystemContract = {
     getPlugins: async (): Promise<Plugin[]> => {
         await delay(500);
-        // Simulate fetching available plugins from Soroban Registry
         return [
             {
                 id: 'plug-001',
@@ -547,17 +546,45 @@ export const EcosystemContract = {
 
     installPlugin: async (userId: string, pluginId: string, price: number): Promise<Transaction> => {
         await delay(1500);
-        // If paid plugin, route funds to Treasury/Developer
         if (price > 0) {
-             await TreasuryContract.depositRevenue(price); // Simplified revenue share
+             await TreasuryContract.depositRevenue(price); 
         }
-        
         return {
             id: `tx-install-${Date.now()}`,
             type: 'PLUGIN_PURCHASE',
             amount: price,
             timestamp: Date.now(),
             status: 'COMPLETED'
+        };
+    }
+};
+
+// --- 12. SECURITY & AUDIT CLUSTER (Phase 12) ---
+export const SecurityAuditContract = {
+    getAuditReports: async (): Promise<AuditReport[]> => {
+        await delay(500);
+        return [
+            { id: 'audit-001', firm: 'Quantstamp', date: Date.now() - 1000000, score: 98, findings: 0, status: 'PASSED', pdfUrl: '#' },
+            { id: 'audit-002', firm: 'CertiK', date: Date.now() - 2000000, score: 95, findings: 2, status: 'ISSUES_FOUND', pdfUrl: '#' },
+            { id: 'audit-003', firm: 'Halborn', date: Date.now(), score: 0, findings: 0, status: 'PENDING', pdfUrl: '#' },
+        ];
+    },
+
+    getBugBountyVaultBalance: async (): Promise<number> => {
+        await delay(300);
+        return 150000; // 150k ARTX in Bounty Vault
+    },
+
+    submitVulnerability: async (reporterId: string, severity: 'CRITICAL'|'HIGH'|'MEDIUM'|'LOW', desc: string): Promise<BountySubmission> => {
+        await delay(1500);
+        return {
+            id: `bounty-${Date.now()}`,
+            reporterId,
+            severity,
+            description: desc,
+            status: 'PENDING',
+            reward: 0,
+            timestamp: Date.now()
         };
     }
 };

@@ -9,7 +9,8 @@ export enum UserRole {
   VENDOR = 'VENDOR', // Phase 5
   ARBITER = 'ARBITER', // Phase 7
   ENTERPRISE_ADMIN = 'ENTERPRISE_ADMIN', // Phase 9
-  DEVELOPER = 'DEVELOPER' // Phase 11
+  DEVELOPER = 'DEVELOPER', // Phase 11
+  AUDITOR = 'AUDITOR' // Phase 12
 }
 
 // Tokenomics Categories
@@ -65,14 +66,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET' | 'PLUGIN_PURCHASE';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET' | 'PLUGIN_PURCHASE' | 'BOUNTY_PAYOUT';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY' | 'ECOSYSTEM';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY' | 'ECOSYSTEM' | 'AUDIT';
 
 // --- Phase 1 Types ---
 
@@ -320,4 +321,26 @@ export interface Plugin {
   installed: boolean; // Local state helper
   icon: string;
   version: string;
+}
+
+// --- Phase 12: Auditing ---
+
+export interface AuditReport {
+  id: string;
+  firm: string; // CertiK, Quantstamp, etc.
+  date: number;
+  score: number;
+  findings: number;
+  status: 'PASSED' | 'ISSUES_FOUND' | 'PENDING';
+  pdfUrl: string;
+}
+
+export interface BountySubmission {
+  id: string;
+  reporterId: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  description: string;
+  status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'PAID';
+  reward: number;
+  timestamp: number;
 }
