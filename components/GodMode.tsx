@@ -356,6 +356,27 @@ const GodMode: React.FC<GodModeProps> = ({
                </button>
              </div>
            </div>
+
+           {/* Phase 10 Integrity Check */}
+           <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 col-span-full">
+               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                   <i className="fas fa-check-double text-green-500"></i> Protocol Integrity Matrix
+               </h3>
+               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                   {['Command', 'Economy', 'Automation', 'Dominance', 'Commerce', 'Go', 'Arbitration', 'Social', 'Enterprise', 'Sustainability'].map((phase, i) => (
+                       <div key={i} className="bg-slate-900 p-3 rounded border border-green-900/30 flex items-center gap-3 transition hover:border-green-500/50 hover:bg-slate-800">
+                           <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] animate-pulse"></div>
+                           <div>
+                               <div className="text-[10px] text-slate-500 font-bold uppercase">Phase {i+1}</div>
+                               <div className="text-xs text-slate-200 font-bold">{phase}</div>
+                           </div>
+                       </div>
+                   ))}
+               </div>
+               <div className="mt-4 text-xs font-mono text-green-400 text-center">
+                   >> ALL SYSTEMS OPERATIONAL. PALLADIUM EDITION LIVE.
+               </div>
+           </div>
         </div>
       )}
 

@@ -65,6 +65,7 @@ const App: React.FC = () => {
   
   // Phase 3.3: Monitor Bot State
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [systemBootMsg, setSystemBootMsg] = useState<string | null>(null);
 
   // Phase 6: Hands Free Mode
   const [isHandsFree, setIsHandsFree] = useState(false);
@@ -79,6 +80,12 @@ const App: React.FC = () => {
   // Simulate Pi Network Login & Pay-to-Load Protocol
   useEffect(() => {
     const initAuth = async () => {
+      // Trigger Boot Sequence Animation
+      setTimeout(() => setSystemBootMsg("Initializing Architex Protocol..."), 500);
+      setTimeout(() => setSystemBootMsg("Loading 10/10 Modules (Palladium)..."), 1500);
+      setTimeout(() => setSystemBootMsg("System Online. Welcome."), 3000);
+      setTimeout(() => setSystemBootMsg(null), 5000);
+
       // Trustline Check
       const hasTrust = await checkTrustline(user.piWalletAddress);
       setUser(prev => ({ ...prev, hasTrustline: hasTrust }));
@@ -337,9 +344,17 @@ const App: React.FC = () => {
   return (
     <div dir={dir} className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-500/30">
       
+      {/* System Boot Notification */}
+      {systemBootMsg && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-cyan-900/90 border border-cyan-500 text-white px-6 py-3 rounded-full shadow-2xl animate-pulse font-bold flex items-center gap-3">
+              <i className="fas fa-terminal"></i>
+              {systemBootMsg}
+          </div>
+      )}
+
       {/* Alert Overlay */}
       {alertMessage && (
-          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 border border-red-500 text-white px-6 py-3 rounded-full shadow-2xl animate-bounce font-bold flex items-center gap-3">
+          <div className="fixed top-32 left-1/2 -translate-x-1/2 z-50 bg-red-900/90 border border-red-500 text-white px-6 py-3 rounded-full shadow-2xl animate-bounce font-bold flex items-center gap-3">
               <i className="fas fa-exclamation-triangle"></i>
               {alertMessage}
           </div>
@@ -430,9 +445,10 @@ const App: React.FC = () => {
             <MobileNavButton icon="fa-home" active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
             <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
-            <MobileNavButton icon="fa-leaf" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
             <MobileNavButton icon="fa-running" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
+            <MobileNavButton icon="fa-balance-scale" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
             <MobileNavButton icon="fa-building" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
+            <MobileNavButton icon="fa-leaf" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
             {user.role === UserRole.SUPER_ADMIN && (
               <MobileNavButton icon="fa-crown" active={view === 'GOD_MODE'} onClick={() => setView('GOD_MODE')} color="text-neon-gold" />
             )}
