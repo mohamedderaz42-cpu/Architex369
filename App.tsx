@@ -5,7 +5,8 @@ import GodMode from './components/GodMode';
 import VestingVault from './components/VestingVault';
 import SocialFi from './components/SocialFi';
 import IoTConnect from './components/IoTConnect';
-import DeFiHub from './components/DeFiHub'; // New Import
+import DeFiHub from './components/DeFiHub'; 
+import CommerceHub from './components/CommerceHub'; // New Import
 import { checkTrustline, UtilityContracts, OraclePriceFeed } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -21,7 +22,8 @@ const INITIAL_USER: User = {
   kycVerified: true,
   isPremium: false,
   stakedAmount: 5000,
-  acceleratorExpiry: 0 // Phase 4
+  acceleratorExpiry: 0,
+  vendorVerified: false
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -246,6 +248,14 @@ const App: React.FC = () => {
                 onUpdateAccelerator={(exp) => setUser(prev => ({...prev, acceleratorExpiry: exp}))}
             />
         );
+      case 'COMMERCE':
+        return (
+            <CommerceHub 
+                user={user}
+                onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+                onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+            />
+        );
       default:
         return <div>View not implemented</div>;
     }
@@ -313,6 +323,7 @@ const App: React.FC = () => {
         <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 hidden md:flex flex-col gap-2">
           <MenuButton icon="fa-home" label={t('dashboard', currentLang)} active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
           <MenuButton icon="fa-coins" label="DeFi Hub" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
+          <MenuButton icon="fa-store" label="Commerce" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -330,6 +341,7 @@ const App: React.FC = () => {
          <div className="md:hidden flex overflow-x-auto gap-2 p-2 bg-slate-900 border-b border-slate-800">
             <MobileNavButton icon="fa-home" active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
+            <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
             <MobileNavButton icon="fa-users" active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
             <MobileNavButton icon="fa-vault" active={view === 'VESTING'} onClick={() => setView('VESTING')} />
             <MobileNavButton icon="fa-network-wired" active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -351,6 +363,7 @@ const App: React.FC = () => {
                  view === 'VESTING' ? t('vestingVault', currentLang) :
                  view === 'SOCIAL' ? t('socialFi', currentLang) :
                  view === 'DEFI' ? 'DeFi Economy' :
+                 view === 'COMMERCE' ? 'Commerce Hub' :
                  t('dashboard', currentLang)}
               </h2>
               <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>

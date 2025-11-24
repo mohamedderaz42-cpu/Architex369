@@ -1,4 +1,4 @@
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -237,6 +237,61 @@ export const UtilityContracts = {
   // 2.14 ZkVerifier
   verifyProof: async (proof: string): Promise<boolean> => { return true; }
 };
+
+// --- 5. COMMERCE & VENDOR CLUSTER (Phase 5) ---
+
+export const CommerceContract = {
+  // Register Vendor (KYB - Know Your Business)
+  registerVendor: async (userId: string, businessData: any): Promise<boolean> => {
+    await delay(2000); // Simulate verification check
+    return true; 
+  },
+
+  // Create Order with Escrow and Micro-Insurance
+  createOrder: async (buyerId: string, vendorId: string, item: string, amount: number): Promise<CommerceOrder> => {
+    await delay(1500);
+    const insuranceFee = amount * 0.02; // 2% Shield Fee
+    
+    // Deposit Fee to Treasury
+    await TreasuryContract.depositFee('ARTX', insuranceFee);
+
+    return {
+      id: `ord-${Date.now()}`,
+      buyerId,
+      vendorId,
+      item,
+      amount,
+      insuranceFee,
+      status: ShippingStatus.PENDING,
+      escrowTxId: `tx-escrow-${Date.now()}`,
+      trackingHash: ''
+    };
+  },
+
+  // Update Shipping & Smart Release
+  updateShipping: async (orderId: string, status: ShippingStatus): Promise<Transaction | null> => {
+    await delay(1000);
+    
+    if (status === ShippingStatus.DELIVERED) {
+      // Smart Release Logic: If Delivered, release funds from Escrow to Vendor
+      return {
+        id: `tx-release-${Date.now()}`,
+        type: 'COMMERCE_RELEASE',
+        amount: 0, // Amount from order
+        timestamp: Date.now(),
+        status: 'COMPLETED'
+      };
+    }
+    return null;
+  },
+
+  // Simulate ERP Sync
+  syncERP: async (vendorId: string): Promise<boolean> => {
+    await delay(2500); // Simulate fetching SAP/Oracle data
+    return true;
+  }
+};
+
 
 // --- LEGACY EXPORTS (Backwards Compatibility) ---
 export const checkTrustline = async (walletAddress: string) => true;

@@ -4,7 +4,8 @@ export enum UserRole {
   USER = 'USER',
   OPERATOR = 'OPERATOR',
   EXECUTIVE = 'EXECUTIVE',
-  SUPER_ADMIN = 'SUPER_ADMIN' // The Founder
+  SUPER_ADMIN = 'SUPER_ADMIN', // The Founder
+  VENDOR = 'VENDOR' // Phase 5
 }
 
 // Tokenomics Categories
@@ -36,6 +37,8 @@ export interface User {
   isPremium: boolean; // For Pay-to-Load protocol
   stakedAmount: number;
   acceleratorExpiry: number; // Phase 4: Timestamp for Accelerator Subscription
+  vendorVerified?: boolean; // Phase 5: KYB Status
+  erpConnected?: boolean; // Phase 5: ERP Sync Status
 }
 
 export interface SocialPost {
@@ -50,14 +53,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE';
 
 // --- Phase 1 Types ---
 
@@ -145,4 +148,26 @@ export interface TreasuryStats {
   piBalance: number;
   collectedFeesTotal: number;
   revenueTotal: number;
+}
+
+// --- Phase 5: Commerce & Vendor Shield ---
+
+export enum ShippingStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED', // Triggers Smart Release
+  DISPUTED = 'DISPUTED'
+}
+
+export interface CommerceOrder {
+  id: string;
+  buyerId: string;
+  vendorId: string;
+  item: string;
+  amount: number;
+  insuranceFee: number; // Micro-insurance
+  status: ShippingStatus;
+  escrowTxId: string;
+  trackingHash?: string;
 }
