@@ -6,7 +6,8 @@ import VestingVault from './components/VestingVault';
 import SocialFi from './components/SocialFi';
 import IoTConnect from './components/IoTConnect';
 import DeFiHub from './components/DeFiHub'; 
-import CommerceHub from './components/CommerceHub'; // New Import
+import CommerceHub from './components/CommerceHub'; 
+import ArchitexGo from './components/ArchitexGo'; // New Import
 import { checkTrustline, UtilityContracts, OraclePriceFeed } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -23,7 +24,9 @@ const INITIAL_USER: User = {
   isPremium: false,
   stakedAmount: 5000,
   acceleratorExpiry: 0,
-  vendorVerified: false
+  vendorVerified: false,
+  isProvider: false,
+  rating: 0
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -53,6 +56,9 @@ const App: React.FC = () => {
   
   // Phase 3.3: Monitor Bot State
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+  // Phase 6: Hands Free Mode
+  const [isHandsFree, setIsHandsFree] = useState(false);
 
   // Language Resolution
   const currentLang = config.forcedLanguage || lang;
@@ -256,6 +262,16 @@ const App: React.FC = () => {
                 onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
             />
         );
+      case 'ARCHITEX_GO':
+        return (
+          <ArchitexGo 
+            user={user}
+            onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+            onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+            isHandsFree={isHandsFree}
+            onToggleHandsFree={setIsHandsFree}
+          />
+        );
       default:
         return <div>View not implemented</div>;
     }
@@ -324,6 +340,7 @@ const App: React.FC = () => {
           <MenuButton icon="fa-home" label={t('dashboard', currentLang)} active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
           <MenuButton icon="fa-coins" label="DeFi Hub" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
           <MenuButton icon="fa-store" label="Commerce" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
+          <MenuButton icon="fa-running" label="Architex Go" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -342,6 +359,7 @@ const App: React.FC = () => {
             <MobileNavButton icon="fa-home" active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
             <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
+            <MobileNavButton icon="fa-running" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
             <MobileNavButton icon="fa-users" active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
             <MobileNavButton icon="fa-vault" active={view === 'VESTING'} onClick={() => setView('VESTING')} />
             <MobileNavButton icon="fa-network-wired" active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -356,26 +374,30 @@ const App: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-96 bg-cyan-900/5 blur-3xl pointer-events-none"></div>
           
           <div className="max-w-6xl mx-auto relative z-10">
-            <header className="mb-8">
-              <h2 className="text-3xl font-bold text-white mb-1">
-                {view === 'GOD_MODE' ? t('godMode', currentLang) : 
-                 view === 'IOT' ? t('iot', currentLang) : 
-                 view === 'VESTING' ? t('vestingVault', currentLang) :
-                 view === 'SOCIAL' ? t('socialFi', currentLang) :
-                 view === 'DEFI' ? 'DeFi Economy' :
-                 view === 'COMMERCE' ? 'Commerce Hub' :
-                 t('dashboard', currentLang)}
-              </h2>
-              <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>
-            </header>
+            {/* Header hidden in Hands Free mode is handled inside ArchitexGo component */}
+            {!isHandsFree && (
+              <header className="mb-8">
+                <h2 className="text-3xl font-bold text-white mb-1">
+                  {view === 'GOD_MODE' ? t('godMode', currentLang) : 
+                   view === 'IOT' ? t('iot', currentLang) : 
+                   view === 'VESTING' ? t('vestingVault', currentLang) :
+                   view === 'SOCIAL' ? t('socialFi', currentLang) :
+                   view === 'DEFI' ? 'DeFi Economy' :
+                   view === 'COMMERCE' ? 'Commerce Hub' :
+                   view === 'ARCHITEX_GO' ? 'Gig Network' :
+                   t('dashboard', currentLang)}
+                </h2>
+                <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>
+              </header>
+            )}
             
             {renderContent()}
           </div>
         </main>
       </div>
 
-      {/* AI Companion */}
-      <ArchieBot currentView={view} userRole={user.role} language={currentLang} />
+      {/* AI Companion - Hide in hands free mode as it has its own overlay */}
+      {!isHandsFree && <ArchieBot currentView={view} userRole={user.role} language={currentLang} />}
     </div>
   );
 };

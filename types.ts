@@ -39,6 +39,8 @@ export interface User {
   acceleratorExpiry: number; // Phase 4: Timestamp for Accelerator Subscription
   vendorVerified?: boolean; // Phase 5: KYB Status
   erpConnected?: boolean; // Phase 5: ERP Sync Status
+  isProvider?: boolean; // Phase 6: Gig Provider Status
+  rating?: number; // Phase 6: Provider Rating
 }
 
 export interface SocialPost {
@@ -53,14 +55,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO';
 
 // --- Phase 1 Types ---
 
@@ -170,4 +172,25 @@ export interface CommerceOrder {
   status: ShippingStatus;
   escrowTxId: string;
   trackingHash?: string;
+}
+
+// --- Phase 6: Architex Go ---
+
+export enum GigStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  DISPUTED = 'DISPUTED'
+}
+
+export interface ServiceGig {
+  id: string;
+  providerId?: string;
+  consumerId: string;
+  title: string;
+  description: string;
+  price: number;
+  status: GigStatus;
+  location: string; // GPS coords or Zone
+  timestamp: number;
 }

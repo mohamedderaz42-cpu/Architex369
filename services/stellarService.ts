@@ -1,4 +1,4 @@
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -289,6 +289,48 @@ export const CommerceContract = {
   syncERP: async (vendorId: string): Promise<boolean> => {
     await delay(2500); // Simulate fetching SAP/Oracle data
     return true;
+  }
+};
+
+// --- 6. ARCHITEX GO (Phase 6) ---
+
+export const GigServiceContract = {
+  // Post a new Gig (Consumer)
+  postGig: async (consumerId: string, title: string, price: number): Promise<ServiceGig> => {
+    await delay(1000);
+    return {
+      id: `gig-${Date.now()}`,
+      consumerId,
+      title,
+      description: 'Mock Description',
+      price,
+      status: GigStatus.OPEN,
+      location: '37.7749,-122.4194', // Mock GPS
+      timestamp: Date.now()
+    };
+  },
+
+  // Accept a Gig (Provider)
+  acceptGig: async (gigId: string, providerId: string): Promise<boolean> => {
+    await delay(1000);
+    return true;
+  },
+
+  // Complete Gig & Payout
+  completeGig: async (gigId: string, price: number): Promise<Transaction> => {
+    await delay(1500);
+    const platformFee = price * 0.05; // 5% Platform Fee
+    
+    // Route fee to Treasury
+    await TreasuryContract.depositFee('ARTX', platformFee);
+
+    return {
+      id: `tx-gig-${Date.now()}`,
+      type: 'GIG_PAYMENT',
+      amount: price - platformFee,
+      timestamp: Date.now(),
+      status: 'COMPLETED'
+    };
   }
 };
 
