@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, CommerceOrder, ShippingStatus, UserRole } from '../types';
-import { CommerceContract } from '../services/stellarService';
+import { CommerceContract, ArbitrationContract } from '../services/stellarService';
 
 interface CommerceHubProps {
   user: User;
@@ -15,9 +15,6 @@ const CommerceHub: React.FC<CommerceHubProps> = ({ user, onUpdateUser, onUpdateB
   
   // Vendor Registration State
   const [vendorName, setVendorName] = useState('');
-  
-  // Create Order Mock Data
-  const [selectedItem, setSelectedItem] = useState('');
 
   // ERP Sync State
   const [erpSyncing, setErpSyncing] = useState(false);
@@ -80,13 +77,35 @@ const CommerceHub: React.FC<CommerceHubProps> = ({ user, onUpdateUser, onUpdateB
       setErpSyncing(false);
   };
 
+  // --- PHASE 7 LINK: DISPUTE BUTTON ---
+  const handleFileDispute = async (orderId: string) => {
+      if (!window.confirm("Are you sure you want to escalate this to the Arbitration Council? This will freeze funds.")) return;
+      setLoading(true);
+      try {
+          // 1. Update Order Status locally to reflect UI immediately
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: ShippingStatus.DISPUTED } : o));
+          
+          // 2. Call Contract to File Dispute
+          await ArbitrationContract.fileDispute(user.id, orderId, "Item not received / Damaged");
+          
+          // 3. Update Shipping Status on Commerce Contract (Mock)
+          await CommerceContract.updateShipping(orderId, ShippingStatus.DISPUTED);
+          
+          alert("Dispute Filed. An Arbiter will be assigned shortly in the Arbitration Council.");
+      } catch (e) {
+          alert("Failed to file dispute.");
+      } finally {
+          setLoading(false);
+      }
+  };
+
   const renderStatusBadge = (status: ShippingStatus) => {
       const colors = {
           [ShippingStatus.PENDING]: 'bg-slate-700 text-slate-300',
           [ShippingStatus.PROCESSING]: 'bg-blue-900 text-blue-300',
           [ShippingStatus.SHIPPED]: 'bg-purple-900 text-purple-300',
           [ShippingStatus.DELIVERED]: 'bg-green-900 text-green-300',
-          [ShippingStatus.DISPUTED]: 'bg-red-900 text-red-300'
+          [ShippingStatus.DISPUTED]: 'bg-red-900 text-red-300 animate-pulse'
       };
       return <span className={`px-2 py-1 rounded text-xs font-bold ${colors[status]}`}>{status}</span>;
   };
@@ -101,106 +120,137 @@ const CommerceHub: React.FC<CommerceHubProps> = ({ user, onUpdateUser, onUpdateB
         </div>
 
         {activeTab === 'MARKET' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                    { name: 'Titanium Hardware Wallet', price: 500, img: 'fa-microchip' },
-                    { name: 'Palladium Node License', price: 1200, img: 'fa-server' },
-                    { name: 'Architex Merch Pack', price: 150, img: 'fa-tshirt' }
-                ].map((item, idx) => (
-                    <div key={idx} className="bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition group">
-                        <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                            <i className={`fas ${item.img} text-cyan-400 text-xl`}></i>
-                        </div>
-                        <h3 className="text-white font-bold mb-1">{item.name}</h3>
-                        <div className="text-2xl font-mono text-slate-300 mb-4">{item.price} <span className="text-xs text-slate-500">ARTX</span></div>
-                        
-                        <div className="flex justify-between items-center text-xs text-slate-500 mb-4">
-                            <span><i className="fas fa-shield-alt text-green-500"></i> Shield Insured</span>
-                            <span>Fee: {(item.price * 0.02).toFixed(1)} ARTX</span>
-                        </div>
+            <div className="space-y-8">
+                {/* Product Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[
+                        { name: 'Titanium Hardware Wallet', price: 500, img: 'fa-microchip' },
+                        { name: 'Palladium Node License', price: 1200, img: 'fa-server' },
+                        { name: 'Architex Merch Pack', price: 150, img: 'fa-tshirt' }
+                    ].map((item, idx) => (
+                        <div key={idx} className="bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition group">
+                            <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                                <i className={`fas ${item.img} text-cyan-400 text-xl`}></i>
+                            </div>
+                            <h3 className="text-white font-bold mb-1">{item.name}</h3>
+                            <div className="text-2xl font-mono text-slate-300 mb-4">{item.price} <span className="text-xs text-slate-500">ARTX</span></div>
+                            
+                            <div className="flex justify-between items-center text-xs text-slate-500 mb-4">
+                                <span><i className="fas fa-shield-alt text-green-500"></i> Shield Insured</span>
+                                <span>Fee: {(item.price * 0.02).toFixed(1)} ARTX</span>
+                            </div>
 
-                        <button 
-                            onClick={() => handleCreateOrder(item.name, item.price)}
-                            disabled={loading}
-                            className="w-full bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 py-2 rounded font-bold hover:bg-cyan-500 hover:text-white transition"
-                        >
-                            {loading ? 'Processing...' : 'Secure Buy'}
-                        </button>
-                    </div>
-                ))}
+                            <button 
+                                onClick={() => handleCreateOrder(item.name, item.price)}
+                                disabled={loading}
+                                className="w-full bg-cyan-900/30 text-cyan-400 border border-cyan-500/30 py-2 rounded font-bold hover:bg-cyan-500 hover:text-white transition"
+                            >
+                                {loading ? 'Processing...' : 'Secure Buy'}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Buyer Orders List */}
+                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                    <h3 className="font-bold text-white mb-4">My Orders</h3>
+                    {orders.filter(o => o.buyerId === user.id).length === 0 ? (
+                        <div className="text-slate-500 text-sm">No active orders.</div>
+                    ) : (
+                        <div className="space-y-4">
+                            {orders.filter(o => o.buyerId === user.id).map(order => (
+                                <div key={order.id} className="bg-slate-900 p-4 rounded border border-slate-700 flex justify-between items-center">
+                                    <div>
+                                        <div className="font-bold text-white">{order.item}</div>
+                                        <div className="text-xs text-slate-500">ID: {order.id}</div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        {renderStatusBadge(order.status)}
+                                        {/* DISPUTE BUTTON - Phase 7 Link */}
+                                        {order.status !== ShippingStatus.DISPUTED && order.status !== ShippingStatus.DELIVERED && (
+                                            <button 
+                                                onClick={() => handleFileDispute(order.id)}
+                                                className="text-xs bg-red-900/30 text-red-400 border border-red-600/30 px-3 py-1 rounded hover:bg-red-900"
+                                            >
+                                                File Dispute
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         )}
 
         {activeTab === 'VENDOR_CONSOLE' && (
             <div className="space-y-6">
                 {!user.vendorVerified ? (
-                    <div className="bg-slate-800 p-8 rounded-xl border border-purple-500/30 text-center max-w-2xl mx-auto">
-                        <i className="fas fa-store-alt text-5xl text-purple-400 mb-4"></i>
-                        <h2 className="text-2xl font-bold text-white mb-2">Become a Verified Vendor</h2>
-                        <p className="text-slate-400 mb-6">Pass the Pi KYB (Know Your Business) check to unlock the Vendor Console and ERP Sync.</p>
-                        
-                        <input 
-                            type="text" 
-                            placeholder="Business Legal Name" 
-                            value={vendorName}
-                            onChange={(e) => setVendorName(e.target.value)}
-                            className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-white mb-4 focus:border-purple-500 outline-none"
-                        />
-                        <button 
-                            onClick={handleRegisterVendor}
-                            disabled={loading}
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-8 rounded transition w-full"
-                        >
-                            {loading ? 'Verifying...' : 'Submit for KYB Verification'}
-                        </button>
+                    <div className="bg-slate-800 p-8 text-center rounded-xl border border-slate-700">
+                        <i className="fas fa-store text-5xl text-slate-500 mb-4"></i>
+                        <h3 className="text-xl font-bold text-white mb-2">Vendor KYB Verification</h3>
+                        <p className="text-slate-400 mb-4 max-w-md mx-auto">To list items and access the ERP bridge, you must verify your business identity on the Pi Network.</p>
+                        <div className="max-w-sm mx-auto space-y-4">
+                            <input 
+                                type="text" 
+                                placeholder="Business Name" 
+                                value={vendorName}
+                                onChange={(e) => setVendorName(e.target.value)}
+                                className="w-full bg-slate-900 border border-slate-600 rounded p-3 text-white"
+                            />
+                            <button 
+                                onClick={handleRegisterVendor}
+                                disabled={loading}
+                                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded transition"
+                            >
+                                {loading ? 'Verifying...' : 'Start KYB Process'}
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-6">
                          {/* ERP Sync */}
-                         <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 flex justify-between items-center">
-                            <div>
-                                <h3 className="font-bold text-white flex items-center gap-2">
-                                    <i className="fas fa-network-wired text-purple-400"></i> Enterprise ERP Sync
-                                </h3>
-                                <p className="text-xs text-slate-400">Connect SAP/Oracle for automated inventory management.</p>
-                            </div>
-                            <button 
-                                onClick={handleSyncERP}
-                                disabled={erpSyncing || user.erpConnected}
-                                className={`px-4 py-2 rounded text-sm font-bold border ${user.erpConnected ? 'border-green-500 text-green-400 bg-green-900/20' : 'border-purple-500 text-purple-400 bg-purple-900/20'}`}
-                            >
-                                {user.erpConnected ? 'ERP ONLINE' : erpSyncing ? 'SYNCING...' : 'CONNECT ERP'}
-                            </button>
+                         <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                             <div>
+                                 <h3 className="font-bold text-white">ERP Bridge</h3>
+                                 <div className="text-xs text-slate-500">
+                                     {user.erpConnected ? <span className="text-green-400">● Connected to Oracle NetSuite</span> : <span className="text-slate-500">● Not Connected</span>}
+                                 </div>
+                             </div>
+                             <button 
+                                 onClick={handleSyncERP}
+                                 disabled={erpSyncing || user.erpConnected}
+                                 className={`px-4 py-2 rounded font-bold text-sm ${user.erpConnected ? 'bg-green-900/20 text-green-400 border border-green-500/30' : 'bg-slate-700 text-white'}`}
+                             >
+                                 {erpSyncing ? 'Syncing...' : user.erpConnected ? 'Synced' : 'Connect ERP'}
+                             </button>
                          </div>
 
-                         {/* Active Orders List */}
-                         <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-                             <div className="p-4 border-b border-slate-700 font-bold text-white">Incoming Orders</div>
+                         {/* Vendor Order Management */}
+                         <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                             <h3 className="font-bold text-white mb-4">Incoming Orders</h3>
                              {orders.length === 0 ? (
-                                 <div className="p-8 text-center text-slate-500">No active orders found.</div>
+                                 <div className="text-slate-500 text-sm">No orders yet.</div>
                              ) : (
-                                 <div className="divide-y divide-slate-700">
+                                 <div className="space-y-4">
                                      {orders.map(order => (
-                                         <div key={order.id} className="p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                                         <div key={order.id} className="bg-slate-900 p-4 rounded border border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
                                              <div>
                                                  <div className="font-bold text-white">{order.item}</div>
-                                                 <div className="text-xs text-slate-400">ID: {order.id} | Buyer: {order.buyerId.substring(0,6)}...</div>
+                                                 <div className="text-xs text-slate-500">Total: {order.amount} ARTX</div>
                                              </div>
                                              <div className="flex items-center gap-4">
-                                                 <div className="text-right">
-                                                     <div className="font-mono text-white">{order.amount} ARTX</div>
-                                                     {renderStatusBadge(order.status)}
-                                                 </div>
+                                                 {renderStatusBadge(order.status)}
                                                  
-                                                 {/* Vendor Actions */}
                                                  {order.status === ShippingStatus.PENDING && (
-                                                     <button onClick={() => handleUpdateShipping(order.id, ShippingStatus.SHIPPED)} className="text-xs bg-blue-900 text-blue-300 px-3 py-1 rounded hover:bg-blue-800">MARK SHIPPED</button>
+                                                     <button onClick={() => handleUpdateShipping(order.id, ShippingStatus.PROCESSING)} className="text-xs bg-blue-900/30 text-blue-400 border border-blue-500/30 px-3 py-1 rounded">Process</button>
+                                                 )}
+                                                 {order.status === ShippingStatus.PROCESSING && (
+                                                     <button onClick={() => handleUpdateShipping(order.id, ShippingStatus.SHIPPED)} className="text-xs bg-purple-900/30 text-purple-400 border border-purple-500/30 px-3 py-1 rounded">Ship</button>
                                                  )}
                                                  {order.status === ShippingStatus.SHIPPED && (
-                                                     <button onClick={() => handleUpdateShipping(order.id, ShippingStatus.DELIVERED)} className="text-xs bg-green-900 text-green-300 px-3 py-1 rounded hover:bg-green-800">CONFIRM DELIVERY</button>
-                                                 )}
-                                                 {order.status === ShippingStatus.DELIVERED && (
-                                                     <div className="text-xs text-green-500 font-bold"><i className="fas fa-check"></i> FUNDS RELEASED</div>
+                                                     <button onClick={() => handleUpdateShipping(order.id, ShippingStatus.DELIVERED)} className="text-xs bg-green-900/30 text-green-400 border border-green-500/30 px-3 py-1 rounded">Mark Delivered</button>
                                                  )}
                                              </div>
                                          </div>
@@ -214,41 +264,24 @@ const CommerceHub: React.FC<CommerceHubProps> = ({ user, onUpdateUser, onUpdateB
         )}
 
         {activeTab === 'SHIELD' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-br from-green-900/20 to-slate-900 p-6 rounded-xl border border-green-500/30">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 bg-green-900/30 rounded-full flex items-center justify-center border border-green-500">
-                            <i className="fas fa-shield-alt text-3xl text-green-400"></i>
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white">Vendor Shield™</h2>
-                            <p className="text-sm text-slate-400">Decentralized Shipping Protection</p>
-                        </div>
-                    </div>
-                    <ul className="space-y-3 text-sm text-slate-300">
-                        <li className="flex gap-2"><i className="fas fa-check text-green-500 mt-1"></i> Funds held in Smart Escrow until delivery.</li>
-                        <li className="flex gap-2"><i className="fas fa-check text-green-500 mt-1"></i> Micro-insurance (2%) covers lost shipments.</li>
-                        <li className="flex gap-2"><i className="fas fa-check text-green-500 mt-1"></i> Automated dispute resolution via Multi-Sig.</li>
-                    </ul>
-                </div>
-
-                <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                     <h3 className="font-bold text-white mb-4">Your Protection Stats</h3>
-                     <div className="space-y-4">
-                         <div className="flex justify-between items-center border-b border-slate-700 pb-2">
-                             <span className="text-slate-400">Active Escrows</span>
-                             <span className="text-white font-mono">{orders.filter(o => o.status !== ShippingStatus.DELIVERED).length}</span>
-                         </div>
-                         <div className="flex justify-between items-center border-b border-slate-700 pb-2">
-                             <span className="text-slate-400">Total Insured Value</span>
-                             <span className="text-white font-mono">{orders.reduce((acc, o) => acc + o.amount, 0).toLocaleString()} ARTX</span>
-                         </div>
-                         <div className="flex justify-between items-center">
-                             <span className="text-slate-400">Shield Status</span>
-                             <span className="text-green-400 font-bold uppercase">Active</span>
-                         </div>
+            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 relative overflow-hidden">
+                 <div className="absolute top-0 right-0 p-4 opacity-5">
+                     <i className="fas fa-shield-virus text-9xl text-green-500"></i>
+                 </div>
+                 <h3 className="text-xl font-bold text-white mb-4">Vendor Shield Protocol</h3>
+                 <p className="text-slate-400 mb-6 text-sm">
+                     The Vendor Shield creates a decentralized micro-insurance pool. 2% of every transaction is locked until successful delivery is verified.
+                 </p>
+                 <div className="grid grid-cols-2 gap-4 max-w-md">
+                     <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                         <div className="text-xs text-slate-500 uppercase">Active Coverage</div>
+                         <div className="text-xl font-mono text-white">{(orders.length * 500).toLocaleString()} ARTX</div>
                      </div>
-                </div>
+                     <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                         <div className="text-xs text-slate-500 uppercase">Claims Rate</div>
+                         <div className="text-xl font-mono text-green-400">0.0%</div>
+                     </div>
+                 </div>
             </div>
         )}
     </div>

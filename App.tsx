@@ -7,8 +7,9 @@ import SocialFi from './components/SocialFi';
 import IoTConnect from './components/IoTConnect';
 import DeFiHub from './components/DeFiHub'; 
 import CommerceHub from './components/CommerceHub'; 
-import ArchitexGo from './components/ArchitexGo'; // New Import
-import { checkTrustline, UtilityContracts, OraclePriceFeed } from './services/stellarService';
+import ArchitexGo from './components/ArchitexGo'; 
+import ArbitrationCouncil from './components/ArbitrationCouncil'; // New Import
+import { checkTrustline, UtilityContracts, OraclePriceFeed, SecurityContract } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
 
@@ -26,7 +27,10 @@ const INITIAL_USER: User = {
   acceleratorExpiry: 0,
   vendorVerified: false,
   isProvider: false,
-  rating: 0
+  rating: 0,
+  reputationScore: 950,
+  badges: [],
+  isFrozen: false
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -117,6 +121,14 @@ const App: React.FC = () => {
     }
   };
 
+  const handlePanic = async () => {
+      if (window.confirm("ARE YOU SURE? This will immediately FREEZE your account assets. Only Multi-Sig Admin can unlock.")) {
+          await SecurityContract.triggerPanic(user.id);
+          setUser(prev => ({ ...prev, isFrozen: true }));
+          setAlertMessage("SECURITY LOCKDOWN: ACCOUNT FROZEN");
+      }
+  };
+
   const toggleRole = () => {
     // For demo purposes only
     const newRole = user.role === UserRole.SUPER_ADMIN ? UserRole.USER : UserRole.SUPER_ADMIN;
@@ -141,6 +153,22 @@ const App: React.FC = () => {
         <p className="text-slate-400 mt-2">Architex Protocol is undergoing upgrades. Check back soon.</p>
       </div>
     );
+  }
+
+  // Account Frozen Guard (Panic Button Triggered)
+  if (user.isFrozen) {
+      return (
+        <div className="min-h-screen bg-red-950 flex flex-col items-center justify-center text-center p-6 text-white font-mono border-8 border-red-600">
+            <div className="text-6xl text-red-500 mb-6 animate-pulse"><i className="fas fa-lock"></i></div>
+            <h1 className="text-4xl font-bold mb-4">ACCOUNT FROZEN</h1>
+            <p className="text-red-200 mb-8 max-w-md">
+                Security Protocol 7 has been triggered. Your assets are safe but locked. Please contact Arbitration Council for identity verification unlock.
+            </p>
+            <div className="bg-black p-4 rounded text-xs text-red-500 font-mono">
+                REF: PANIC_TX_{user.id}
+            </div>
+        </div>
+      );
   }
 
   const renderContent = () => {
@@ -272,6 +300,14 @@ const App: React.FC = () => {
             onToggleHandsFree={setIsHandsFree}
           />
         );
+      case 'ARBITRATION':
+          return (
+              <ArbitrationCouncil 
+                  user={user}
+                  onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+                  onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+              />
+          );
       default:
         return <div>View not implemented</div>;
     }
@@ -286,6 +322,17 @@ const App: React.FC = () => {
               <i className="fas fa-exclamation-triangle"></i>
               {alertMessage}
           </div>
+      )}
+
+      {/* Panic Button (Fixed Bottom Right) */}
+      {!isHandsFree && !user.isFrozen && (
+          <button 
+            onClick={handlePanic}
+            className="fixed bottom-6 right-6 md:right-auto md:left-6 z-50 w-14 h-14 rounded-full bg-red-600 shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center justify-center text-white text-2xl hover:bg-red-700 hover:scale-110 transition active:scale-95 border-4 border-red-800"
+            title="EMERGENCY FREEZE"
+          >
+              <i className="fas fa-radiation"></i>
+          </button>
       )}
 
       {/* Navbar */}
@@ -341,6 +388,7 @@ const App: React.FC = () => {
           <MenuButton icon="fa-coins" label="DeFi Hub" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
           <MenuButton icon="fa-store" label="Commerce" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
           <MenuButton icon="fa-running" label="Architex Go" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
+          <MenuButton icon="fa-balance-scale" label="Arbitration" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -360,9 +408,9 @@ const App: React.FC = () => {
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
             <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
             <MobileNavButton icon="fa-running" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
+            <MobileNavButton icon="fa-balance-scale" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
             <MobileNavButton icon="fa-users" active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
             <MobileNavButton icon="fa-vault" active={view === 'VESTING'} onClick={() => setView('VESTING')} />
-            <MobileNavButton icon="fa-network-wired" active={view === 'IOT'} onClick={() => setView('IOT')} />
             {user.role === UserRole.SUPER_ADMIN && (
               <MobileNavButton icon="fa-crown" active={view === 'GOD_MODE'} onClick={() => setView('GOD_MODE')} color="text-neon-gold" />
             )}
@@ -385,6 +433,7 @@ const App: React.FC = () => {
                    view === 'DEFI' ? 'DeFi Economy' :
                    view === 'COMMERCE' ? 'Commerce Hub' :
                    view === 'ARCHITEX_GO' ? 'Gig Network' :
+                   view === 'ARBITRATION' ? 'Arbitration Council' :
                    t('dashboard', currentLang)}
                 </h2>
                 <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>

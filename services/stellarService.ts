@@ -1,4 +1,4 @@
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -231,9 +231,22 @@ export const UtilityContracts = {
   // 2.11 InsurancePool
   getCoverageStatus: async (userId: string): Promise<boolean> => { return false; },
 
-  // 2.12 NftFactory
+  // 2.12 NftFactory (Enhanced for Phase 7)
   mintSoulboundIdentity: async (userId: string, kycData: any): Promise<string> => { return 'nft-hash-123'; },
   
+  // Mint Reputation Badge (SBT)
+  mintBadge: async (userId: string, type: 'ARBITER' | 'TOP_SELLER' | 'OG'): Promise<SoulboundBadge> => {
+      await delay(1000);
+      return {
+          id: `sbt-${Date.now()}`,
+          name: type === 'ARBITER' ? 'Justice Gavel' : 'Commerce Star',
+          description: 'Soulbound badge verifying reputation status',
+          icon: type === 'ARBITER' ? 'fa-gavel' : 'fa-star',
+          rarity: 'EPIC',
+          issuedAt: Date.now()
+      };
+  },
+
   // 2.14 ZkVerifier
   verifyProof: async (proof: string): Promise<boolean> => { return true; }
 };
@@ -332,6 +345,55 @@ export const GigServiceContract = {
       status: 'COMPLETED'
     };
   }
+};
+
+// --- 7. ARBITRATION & SECURITY CLUSTER (Phase 7) ---
+
+export const SecurityContract = {
+    // Panic Button Trigger (Account Freeze)
+    triggerPanic: async (userId: string): Promise<boolean> => {
+        await delay(500);
+        // In reality: Locks all smart contract assets for this user ID
+        return true;
+    },
+
+    // Verify Arbiter Eligibility
+    verifyArbiter: async (userId: string, reputation: number): Promise<boolean> => {
+        // Needs high reputation (> 800)
+        return reputation > 800;
+    }
+};
+
+export const ArbitrationContract = {
+    // File a dispute
+    fileDispute: async (plaintiffId: string, orderId: string, reason: string): Promise<Dispute> => {
+        await delay(1500);
+        return {
+            id: `disp-${Date.now()}`,
+            relatedOrderId: orderId,
+            plaintiffId,
+            defendantId: 'vendor-unknown',
+            reason,
+            evidenceHash: 'ipfs-hash-evidence',
+            status: DisputeStatus.VOTING,
+            assignedArbiters: [],
+            votesForPlaintiff: 0,
+            votesForDefendant: 0,
+            createdAt: Date.now()
+        };
+    },
+
+    // Vote on a dispute
+    voteOnDispute: async (disputeId: string, arbiterId: string, voteForPlaintiff: boolean): Promise<Transaction> => {
+        await delay(1000);
+        return {
+            id: `tx-vote-${Date.now()}`,
+            type: 'DISPUTE_RESOLUTION',
+            amount: 5, // Arbiter Reward
+            timestamp: Date.now(),
+            status: 'COMPLETED'
+        };
+    }
 };
 
 

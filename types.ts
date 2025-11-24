@@ -5,7 +5,8 @@ export enum UserRole {
   OPERATOR = 'OPERATOR',
   EXECUTIVE = 'EXECUTIVE',
   SUPER_ADMIN = 'SUPER_ADMIN', // The Founder
-  VENDOR = 'VENDOR' // Phase 5
+  VENDOR = 'VENDOR', // Phase 5
+  ARBITER = 'ARBITER' // Phase 7
 }
 
 // Tokenomics Categories
@@ -41,6 +42,9 @@ export interface User {
   erpConnected?: boolean; // Phase 5: ERP Sync Status
   isProvider?: boolean; // Phase 6: Gig Provider Status
   rating?: number; // Phase 6: Provider Rating
+  reputationScore?: number; // Phase 7: Global Trust Score
+  badges?: SoulboundBadge[]; // Phase 7: SBTs
+  isFrozen?: boolean; // Phase 7: Panic Button State
 }
 
 export interface SocialPost {
@@ -55,14 +59,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION';
 
 // --- Phase 1 Types ---
 
@@ -193,4 +197,36 @@ export interface ServiceGig {
   status: GigStatus;
   location: string; // GPS coords or Zone
   timestamp: number;
+}
+
+// --- Phase 7: Arbitration & Security ---
+
+export interface SoulboundBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+  issuedAt: number;
+}
+
+export enum DisputeStatus {
+  OPEN = 'OPEN',
+  VOTING = 'VOTING',
+  RESOLVED_REFUND = 'RESOLVED_REFUND',
+  RESOLVED_RELEASE = 'RESOLVED_RELEASE'
+}
+
+export interface Dispute {
+  id: string;
+  relatedOrderId: string; // Or GigId
+  plaintiffId: string;
+  defendantId: string;
+  reason: string;
+  evidenceHash: string;
+  status: DisputeStatus;
+  assignedArbiters: string[]; // Arbiter User IDs
+  votesForPlaintiff: number;
+  votesForDefendant: number;
+  createdAt: number;
 }
