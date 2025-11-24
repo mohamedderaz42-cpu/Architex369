@@ -1,0 +1,9 @@
+{
+  "name": "Architex",
+  "description": "The ultimate DApp hosted exclusively within the Pi Network ecosystem, powered by Stellar Soroban smart contracts. Features a hybrid token economy, AI companionship, and decentralized governance.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
