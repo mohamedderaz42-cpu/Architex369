@@ -1,4 +1,5 @@
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof } from '../types';
+
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -446,6 +447,43 @@ export const EnterpriseContract = {
             amount,
             timestamp: Date.now(),
             status: 'COMPLETED'
+        };
+    }
+};
+
+// --- 10. SUSTAINABILITY CLUSTER (Phase 10) ---
+export const SustainabilityContract = {
+    createPassport: async (name: string, origin: string): Promise<MaterialPassport> => {
+        await delay(1000);
+        return {
+            id: `pass-${Date.now()}`,
+            name,
+            origin,
+            composition: 'Recycled Polymer 80%',
+            carbonFootprint: Math.floor(Math.random() * 50) + 10,
+            recyclability: 95,
+            tags: [SustainabilityTag.RECYCLED, SustainabilityTag.LOCAL],
+            issueDate: Date.now()
+        };
+    },
+
+    purchaseOffset: async (userId: string, amountARTX: number): Promise<{tx: Transaction, score: number}> => {
+        await delay(1500);
+        // 1 ARTX = 10kg CO2 Offset (Simulated)
+        const offsetKg = amountARTX * 10;
+        
+        // Route funds to Green Fund (Treasury for now)
+        await TreasuryContract.depositRevenue(amountARTX);
+
+        return {
+            tx: {
+                id: `tx-carbon-${Date.now()}`,
+                type: 'CARBON_OFFSET',
+                amount: amountARTX,
+                timestamp: Date.now(),
+                status: 'COMPLETED'
+            },
+            score: 85 // New Green Score
         };
     }
 };

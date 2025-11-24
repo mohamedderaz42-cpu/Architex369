@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, UserRole, ViewState, VestingSchedule, VestingCategory, Language, SystemConfig } from './types';
 import ArchieBot from './components/ArchieBot';
@@ -10,6 +11,7 @@ import CommerceHub from './components/CommerceHub';
 import ArchitexGo from './components/ArchitexGo'; 
 import ArbitrationCouncil from './components/ArbitrationCouncil'; 
 import EnterprisePortal from './components/EnterprisePortal';
+import SustainabilityHub from './components/SustainabilityHub';
 import { checkTrustline, UtilityContracts, OraclePriceFeed, SecurityContract } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -32,7 +34,8 @@ const INITIAL_USER: User = {
   reputationScore: 950,
   badges: [],
   isFrozen: false,
-  companyName: 'Architex Foundation'
+  companyName: 'Architex Foundation',
+  greenScore: 75
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -318,6 +321,14 @@ const App: React.FC = () => {
                   onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
               />
           );
+      case 'SUSTAINABILITY':
+          return (
+              <SustainabilityHub 
+                  user={user}
+                  onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+                  onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+              />
+          );
       default:
         return <div>View not implemented</div>;
     }
@@ -400,6 +411,7 @@ const App: React.FC = () => {
           <MenuButton icon="fa-running" label="Architex Go" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
           <MenuButton icon="fa-balance-scale" label="Arbitration" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
           <MenuButton icon="fa-building" label="Enterprise" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
+          <MenuButton icon="fa-leaf" label="Sustainability" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -418,10 +430,9 @@ const App: React.FC = () => {
             <MobileNavButton icon="fa-home" active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
             <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
+            <MobileNavButton icon="fa-leaf" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
             <MobileNavButton icon="fa-running" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
             <MobileNavButton icon="fa-building" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
-            <MobileNavButton icon="fa-users" active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
-            <MobileNavButton icon="fa-vault" active={view === 'VESTING'} onClick={() => setView('VESTING')} />
             {user.role === UserRole.SUPER_ADMIN && (
               <MobileNavButton icon="fa-crown" active={view === 'GOD_MODE'} onClick={() => setView('GOD_MODE')} color="text-neon-gold" />
             )}
@@ -446,6 +457,7 @@ const App: React.FC = () => {
                    view === 'ARCHITEX_GO' ? 'Gig Network' :
                    view === 'ARBITRATION' ? 'Arbitration Council' :
                    view === 'ENTERPRISE' ? 'Enterprise Portal' :
+                   view === 'SUSTAINABILITY' ? 'Sustainability Hub' :
                    t('dashboard', currentLang)}
                 </h2>
                 <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>

@@ -1,3 +1,4 @@
+
 // Role-Based Access Control (RBAC)
 export enum UserRole {
   GUEST = 'GUEST',
@@ -47,6 +48,7 @@ export interface User {
   badges?: SoulboundBadge[]; // Phase 7: SBTs
   isFrozen?: boolean; // Phase 7: Panic Button State
   companyName?: string; // Phase 9
+  greenScore?: number; // Phase 10
 }
 
 export interface SocialPost {
@@ -61,14 +63,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY';
 
 // --- Phase 1 Types ---
 
@@ -267,4 +269,30 @@ export interface Tender {
   bids: Bid[];
   awardedTo?: string;
   deadline: number;
+}
+
+// --- Phase 10: Sustainability ---
+
+export enum SustainabilityTag {
+  RECYCLED = 'RECYCLED',
+  BIODEGRADABLE = 'BIODEGRADABLE',
+  LOCAL = 'LOCAL',
+  CARBON_NEUTRAL = 'CARBON_NEUTRAL'
+}
+
+export interface MaterialPassport {
+  id: string;
+  name: string;
+  origin: string;
+  composition: string; // e.g. "100% Recycled Aluminum"
+  carbonFootprint: number; // kg CO2e
+  recyclability: number; // %
+  tags: SustainabilityTag[];
+  issueDate: number;
+}
+
+export interface CarbonRecord {
+    userId: string;
+    totalOffset: number; // kg CO2
+    greenScore: number; // 0-100
 }
