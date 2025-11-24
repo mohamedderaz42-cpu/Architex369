@@ -1,4 +1,4 @@
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -247,7 +247,19 @@ export const UtilityContracts = {
       };
   },
 
-  // 2.14 ZkVerifier
+  // 2.14 ZkVerifier (Phase 9)
+  // Simulate Generation of a ZK Proof
+  generateZkProof: async (userId: string, type: 'SOLVENCY' | 'IDENTITY', secretData: any): Promise<ZkProof> => {
+      await delay(2000); // Heavy computation simulation
+      return {
+          id: `zk-${Date.now()}`,
+          type,
+          proofHash: '0xZK_SNARK_PROOF_' + Math.random().toString(36).substring(7),
+          timestamp: Date.now(),
+          verified: true
+      };
+  },
+
   verifyProof: async (proof: string): Promise<boolean> => { return true; }
 };
 
@@ -402,6 +414,39 @@ export const PrivacyContract = {
     initiateBurn: async (userId: string): Promise<boolean> => {
         await delay(3000); // Simulate cryptographic shredding
         return true;
+    }
+};
+
+// --- 9. ENTERPRISE CLUSTER (Phase 9) ---
+export const EnterpriseContract = {
+    createTender: async (enterpriseId: string, title: string, budget: number): Promise<Tender> => {
+        await delay(1000);
+        return {
+            id: `tender-${Date.now()}`,
+            enterpriseId,
+            title,
+            description: 'Corporate procurement request verified on Soroban.',
+            budgetCap: budget,
+            status: TenderStatus.OPEN,
+            bids: [],
+            deadline: Date.now() + 7 * 86400000 // 1 week
+        };
+    },
+
+    submitBid: async (tenderId: string, vendorId: string, amount: number): Promise<boolean> => {
+        await delay(1000);
+        return true;
+    },
+    
+    awardTender: async (tenderId: string, vendorId: string, amount: number): Promise<Transaction> => {
+        await delay(1500);
+        return {
+            id: `tx-tender-award-${Date.now()}`,
+            type: 'TENDER_PAYOUT',
+            amount,
+            timestamp: Date.now(),
+            status: 'COMPLETED'
+        };
     }
 };
 

@@ -9,6 +9,7 @@ import DeFiHub from './components/DeFiHub';
 import CommerceHub from './components/CommerceHub'; 
 import ArchitexGo from './components/ArchitexGo'; 
 import ArbitrationCouncil from './components/ArbitrationCouncil'; 
+import EnterprisePortal from './components/EnterprisePortal';
 import { checkTrustline, UtilityContracts, OraclePriceFeed, SecurityContract } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -30,7 +31,8 @@ const INITIAL_USER: User = {
   rating: 0,
   reputationScore: 950,
   badges: [],
-  isFrozen: false
+  isFrozen: false,
+  companyName: 'Architex Foundation'
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -308,6 +310,14 @@ const App: React.FC = () => {
                   onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
               />
           );
+      case 'ENTERPRISE':
+          return (
+              <EnterprisePortal 
+                  user={user}
+                  onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+                  onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+              />
+          );
       default:
         return <div>View not implemented</div>;
     }
@@ -389,6 +399,7 @@ const App: React.FC = () => {
           <MenuButton icon="fa-store" label="Commerce" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
           <MenuButton icon="fa-running" label="Architex Go" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
           <MenuButton icon="fa-balance-scale" label="Arbitration" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
+          <MenuButton icon="fa-building" label="Enterprise" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -408,7 +419,7 @@ const App: React.FC = () => {
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
             <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
             <MobileNavButton icon="fa-running" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
-            <MobileNavButton icon="fa-balance-scale" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
+            <MobileNavButton icon="fa-building" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
             <MobileNavButton icon="fa-users" active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
             <MobileNavButton icon="fa-vault" active={view === 'VESTING'} onClick={() => setView('VESTING')} />
             {user.role === UserRole.SUPER_ADMIN && (
@@ -434,6 +445,7 @@ const App: React.FC = () => {
                    view === 'COMMERCE' ? 'Commerce Hub' :
                    view === 'ARCHITEX_GO' ? 'Gig Network' :
                    view === 'ARBITRATION' ? 'Arbitration Council' :
+                   view === 'ENTERPRISE' ? 'Enterprise Portal' :
                    t('dashboard', currentLang)}
                 </h2>
                 <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>

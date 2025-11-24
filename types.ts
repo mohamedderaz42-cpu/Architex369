@@ -6,7 +6,8 @@ export enum UserRole {
   EXECUTIVE = 'EXECUTIVE',
   SUPER_ADMIN = 'SUPER_ADMIN', // The Founder
   VENDOR = 'VENDOR', // Phase 5
-  ARBITER = 'ARBITER' // Phase 7
+  ARBITER = 'ARBITER', // Phase 7
+  ENTERPRISE_ADMIN = 'ENTERPRISE_ADMIN' // Phase 9
 }
 
 // Tokenomics Categories
@@ -45,6 +46,7 @@ export interface User {
   reputationScore?: number; // Phase 7: Global Trust Score
   badges?: SoulboundBadge[]; // Phase 7: SBTs
   isFrozen?: boolean; // Phase 7: Panic Button State
+  companyName?: string; // Phase 9
 }
 
 export interface SocialPost {
@@ -59,14 +61,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE';
 
 // --- Phase 1 Types ---
 
@@ -229,4 +231,40 @@ export interface Dispute {
   votesForPlaintiff: number;
   votesForDefendant: number;
   createdAt: number;
+}
+
+// --- Phase 9: Enterprise & Privacy ---
+
+export interface ZkProof {
+  id: string;
+  type: 'SOLVENCY' | 'IDENTITY';
+  proofHash: string; // The "ZK-Snark" output
+  timestamp: number;
+  verified: boolean;
+}
+
+export enum TenderStatus {
+  OPEN = 'OPEN',
+  CLOSED = 'CLOSED',
+  AWARDED = 'AWARDED'
+}
+
+export interface Bid {
+  vendorId: string;
+  vendorName: string;
+  amount: number;
+  proposalHash: string;
+  timestamp: number;
+}
+
+export interface Tender {
+  id: string;
+  enterpriseId: string;
+  title: string;
+  description: string;
+  budgetCap: number;
+  status: TenderStatus;
+  bids: Bid[];
+  awardedTo?: string;
+  deadline: number;
 }
