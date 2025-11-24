@@ -12,6 +12,7 @@ import ArchitexGo from './components/ArchitexGo';
 import ArbitrationCouncil from './components/ArbitrationCouncil'; 
 import EnterprisePortal from './components/EnterprisePortal';
 import SustainabilityHub from './components/SustainabilityHub';
+import EcosystemHub from './components/EcosystemHub'; // New Import
 import { checkTrustline, UtilityContracts, OraclePriceFeed, SecurityContract } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -35,7 +36,8 @@ const INITIAL_USER: User = {
   badges: [],
   isFrozen: false,
   companyName: 'Architex Foundation',
-  greenScore: 75
+  greenScore: 75,
+  installedPlugins: []
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -82,8 +84,8 @@ const App: React.FC = () => {
     const initAuth = async () => {
       // Trigger Boot Sequence Animation
       setTimeout(() => setSystemBootMsg("Initializing Architex Protocol..."), 500);
-      setTimeout(() => setSystemBootMsg("Loading 10/10 Modules (Palladium)..."), 1500);
-      setTimeout(() => setSystemBootMsg("System Online. Welcome."), 3000);
+      setTimeout(() => setSystemBootMsg("Loading 11/11 Modules (Palladium)..."), 1500);
+      setTimeout(() => setSystemBootMsg("System Online. Ecosystem Live."), 3000);
       setTimeout(() => setSystemBootMsg(null), 5000);
 
       // Trustline Check
@@ -336,6 +338,14 @@ const App: React.FC = () => {
                   onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
               />
           );
+      case 'ECOSYSTEM':
+          return (
+              <EcosystemHub 
+                  user={user}
+                  onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+                  onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+              />
+          );
       default:
         return <div>View not implemented</div>;
     }
@@ -427,6 +437,7 @@ const App: React.FC = () => {
           <MenuButton icon="fa-balance-scale" label="Arbitration" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
           <MenuButton icon="fa-building" label="Enterprise" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
           <MenuButton icon="fa-leaf" label="Sustainability" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
+          <MenuButton icon="fa-cubes" label="Ecosystem" active={view === 'ECOSYSTEM'} onClick={() => setView('ECOSYSTEM')} />
           <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
           <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           <MenuButton icon="fa-network-wired" label={t('iot', currentLang)} active={view === 'IOT'} onClick={() => setView('IOT')} />
@@ -449,6 +460,7 @@ const App: React.FC = () => {
             <MobileNavButton icon="fa-balance-scale" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
             <MobileNavButton icon="fa-building" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
             <MobileNavButton icon="fa-leaf" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
+            <MobileNavButton icon="fa-cubes" active={view === 'ECOSYSTEM'} onClick={() => setView('ECOSYSTEM')} />
             {user.role === UserRole.SUPER_ADMIN && (
               <MobileNavButton icon="fa-crown" active={view === 'GOD_MODE'} onClick={() => setView('GOD_MODE')} color="text-neon-gold" />
             )}
@@ -474,6 +486,7 @@ const App: React.FC = () => {
                    view === 'ARBITRATION' ? 'Arbitration Council' :
                    view === 'ENTERPRISE' ? 'Enterprise Portal' :
                    view === 'SUSTAINABILITY' ? 'Sustainability Hub' :
+                   view === 'ECOSYSTEM' ? 'Ecosystem Hub' :
                    t('dashboard', currentLang)}
                 </h2>
                 <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>

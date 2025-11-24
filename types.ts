@@ -8,7 +8,8 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN', // The Founder
   VENDOR = 'VENDOR', // Phase 5
   ARBITER = 'ARBITER', // Phase 7
-  ENTERPRISE_ADMIN = 'ENTERPRISE_ADMIN' // Phase 9
+  ENTERPRISE_ADMIN = 'ENTERPRISE_ADMIN', // Phase 9
+  DEVELOPER = 'DEVELOPER' // Phase 11
 }
 
 // Tokenomics Categories
@@ -49,6 +50,7 @@ export interface User {
   isFrozen?: boolean; // Phase 7: Panic Button State
   companyName?: string; // Phase 9
   greenScore?: number; // Phase 10
+  installedPlugins?: string[]; // Phase 11
 }
 
 export interface SocialPost {
@@ -63,14 +65,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET' | 'PLUGIN_PURCHASE';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY' | 'ECOSYSTEM';
 
 // --- Phase 1 Types ---
 
@@ -295,4 +297,27 @@ export interface CarbonRecord {
     userId: string;
     totalOffset: number; // kg CO2
     greenScore: number; // 0-100
+}
+
+// --- Phase 11: Ecosystem (Plugins & SDK) ---
+
+export enum PluginCategory {
+  DEFI = 'DEFI',
+  UI_THEME = 'UI_THEME',
+  ANALYTICS = 'ANALYTICS',
+  SECURITY = 'SECURITY',
+  UTILITY = 'UTILITY'
+}
+
+export interface Plugin {
+  id: string;
+  name: string;
+  description: string;
+  author: string;
+  price: number; // in ARTX
+  rating: number; // 0-5
+  category: PluginCategory;
+  installed: boolean; // Local state helper
+  icon: string;
+  version: string;
 }

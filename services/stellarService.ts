@@ -1,5 +1,5 @@
 
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord, Plugin, PluginCategory } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -484,6 +484,80 @@ export const SustainabilityContract = {
                 status: 'COMPLETED'
             },
             score: 85 // New Green Score
+        };
+    }
+};
+
+// --- 11. ECOSYSTEM CLUSTER (Phase 11) ---
+export const EcosystemContract = {
+    getPlugins: async (): Promise<Plugin[]> => {
+        await delay(500);
+        // Simulate fetching available plugins from Soroban Registry
+        return [
+            {
+                id: 'plug-001',
+                name: 'Dark Pool Router',
+                description: 'Route swaps through private liquidity pools for zero slippage.',
+                author: 'Architex Labs',
+                price: 50,
+                rating: 4.8,
+                category: PluginCategory.DEFI,
+                installed: false,
+                icon: 'fa-mask',
+                version: '1.0.2'
+            },
+            {
+                id: 'plug-002',
+                name: 'Neon Gold Theme',
+                description: 'Exclusive UI skin for the true Palladium experience.',
+                author: 'Community Dev',
+                price: 10,
+                rating: 4.5,
+                category: PluginCategory.UI_THEME,
+                installed: false,
+                icon: 'fa-paint-brush',
+                version: '2.1.0'
+            },
+            {
+                id: 'plug-003',
+                name: 'Whale Alert Pro',
+                description: 'Real-time notifications for transactions > 100k ARTX.',
+                author: 'DataNode',
+                price: 25,
+                rating: 4.9,
+                category: PluginCategory.ANALYTICS,
+                installed: false,
+                icon: 'fa-chart-line',
+                version: '1.0.0'
+            },
+            {
+                id: 'plug-004',
+                name: 'Anti-Phish Guard',
+                description: 'Enhanced security layer scanning malicious domains.',
+                author: 'SecuTeam',
+                price: 0,
+                rating: 4.7,
+                category: PluginCategory.SECURITY,
+                installed: false,
+                icon: 'fa-shield-alt',
+                version: '1.5.3'
+            }
+        ];
+    },
+
+    installPlugin: async (userId: string, pluginId: string, price: number): Promise<Transaction> => {
+        await delay(1500);
+        // If paid plugin, route funds to Treasury/Developer
+        if (price > 0) {
+             await TreasuryContract.depositRevenue(price); // Simplified revenue share
+        }
+        
+        return {
+            id: `tx-install-${Date.now()}`,
+            type: 'PLUGIN_PURCHASE',
+            amount: price,
+            timestamp: Date.now(),
+            status: 'COMPLETED'
         };
     }
 };
