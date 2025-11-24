@@ -1,5 +1,5 @@
 
-import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord, Plugin, PluginCategory, AuditReport, BountySubmission } from '../types';
+import { Transaction, MultiSigProposal, OracleData, LiquidityPool, TreasuryStats, PricePoint, CommerceOrder, ShippingStatus, ServiceGig, GigStatus, Dispute, DisputeStatus, SoulboundBadge, Tender, TenderStatus, Bid, ZkProof, MaterialPassport, SustainabilityTag, CarbonRecord, Plugin, PluginCategory, AuditReport, BountySubmission, LGEStats } from '../types';
 
 /**
  * ARCHITEX SERVICE LAYER (Soroban Matrix)
@@ -585,6 +585,46 @@ export const SecurityAuditContract = {
             status: 'PENDING',
             reward: 0,
             timestamp: Date.now()
+        };
+    }
+};
+
+// --- 13. LGE CLUSTER (Phase 13) ---
+export const LGEManagerContract = {
+    getStats: async (): Promise<LGEStats> => {
+        await delay(500);
+        return {
+            raisedPi: 125000, // Mock current raise
+            hardCapPi: 1000000,
+            participants: 4250,
+            currentPeg: 1.00,
+            status: 'ACTIVE',
+            endTime: Date.now() + 3 * 86400000 // 3 days left
+        };
+    },
+
+    contribute: async (userId: string, amountPi: number): Promise<{tx: Transaction, artxAmount: number}> => {
+        await delay(2000);
+        
+        // MOCK PEG LOGIC: 1 ARTX = $1.00
+        // Assume Pi Price = $50.00 (Simulation)
+        // 1 Pi = 50 ARTX
+        const exchangeRate = 50; 
+        const artxReceived = amountPi * exchangeRate;
+
+        // 13.2: Mandatory Staking Logic
+        // We automatically call stake in the background
+        await StakingRewardsContract.stake(userId, artxReceived);
+
+        return {
+            tx: {
+                id: `lge-tx-${Date.now()}`,
+                type: 'LGE_CONTRIBUTION',
+                amount: artxReceived,
+                timestamp: Date.now(),
+                status: 'COMPLETED'
+            },
+            artxAmount: artxReceived
         };
     }
 };

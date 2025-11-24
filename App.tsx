@@ -13,7 +13,8 @@ import ArbitrationCouncil from './components/ArbitrationCouncil';
 import EnterprisePortal from './components/EnterprisePortal';
 import SustainabilityHub from './components/SustainabilityHub';
 import EcosystemHub from './components/EcosystemHub'; 
-import SecurityAuditHub from './components/SecurityAuditHub'; // New Import
+import SecurityAuditHub from './components/SecurityAuditHub'; 
+import LGELaunchpad from './components/LGELaunchpad'; // New Import
 import { checkTrustline, UtilityContracts, OraclePriceFeed, SecurityContract } from './services/stellarService';
 import { t, getDir } from './services/localization';
 import { requestPiPayment, showPiAd } from './services/piService';
@@ -38,7 +39,8 @@ const INITIAL_USER: User = {
   isFrozen: false,
   companyName: 'Architex Foundation',
   greenScore: 75,
-  installedPlugins: []
+  installedPlugins: [],
+  hasBetaAccess: true // Admin has access
 };
 
 const INITIAL_CONFIG: SystemConfig = {
@@ -78,15 +80,15 @@ const App: React.FC = () => {
   const dir = getDir(currentLang);
 
   // Mock Users Database for God Mode
-  const [usersDb, setUsersDb] = useState<User[]>([INITIAL_USER, { ...INITIAL_USER, id: 'u2', username: 'Trader_Joe', role: UserRole.USER, isPremium: false, acceleratorExpiry: 0 }]);
+  const [usersDb, setUsersDb] = useState<User[]>([INITIAL_USER, { ...INITIAL_USER, id: 'u2', username: 'Trader_Joe', role: UserRole.USER, isPremium: false, acceleratorExpiry: 0, hasBetaAccess: false }]);
 
   // Simulate Pi Network Login & Pay-to-Load Protocol
   useEffect(() => {
     const initAuth = async () => {
-      // Trigger Boot Sequence Animation (Updated for Phase 12)
+      // Trigger Boot Sequence Animation (Updated for Phase 13)
       setTimeout(() => setSystemBootMsg("Initializing Architex Protocol..."), 500);
-      setTimeout(() => setSystemBootMsg("Verifying 12/12 Modules (Palladium)..."), 1500);
-      setTimeout(() => setSystemBootMsg("System Online. Audit Phase Active."), 3000);
+      setTimeout(() => setSystemBootMsg("Verifying LGE Contracts..."), 1500);
+      setTimeout(() => setSystemBootMsg("Palladium Edition: Online."), 3000);
       setTimeout(() => setSystemBootMsg(null), 5000);
 
       // Trustline Check
@@ -353,6 +355,14 @@ const App: React.FC = () => {
                   user={user}
               />
           );
+      case 'LGE':
+          return (
+              <LGELaunchpad 
+                  user={user}
+                  onUpdateBalance={(bal) => setUser(prev => ({...prev, artxBalance: bal}))}
+                  onUpdateUser={(u) => setUser(prev => ({...prev, ...u}))}
+              />
+          );
       default:
         return <div>View not implemented</div>;
     }
@@ -436,18 +446,24 @@ const App: React.FC = () => {
 
       <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
         {/* Sidebar */}
-        <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 hidden md:flex flex-col gap-2">
+        <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-4 hidden md:flex flex-col gap-2 overflow-y-auto">
+          <div className="px-4 py-2 text-xs text-slate-500 font-bold uppercase">Main</div>
           <MenuButton icon="fa-home" label={t('dashboard', currentLang)} active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
+          <MenuButton icon="fa-rocket" label="LGE Launchpad" active={view === 'LGE'} onClick={() => setView('LGE')} color="text-neon-gold" />
+          
+          <div className="mt-2 px-4 py-2 text-xs text-slate-500 font-bold uppercase">Economy</div>
           <MenuButton icon="fa-coins" label="DeFi Hub" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
           <MenuButton icon="fa-store" label="Commerce" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
           <MenuButton icon="fa-running" label="Architex Go" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
+          
+          <div className="mt-2 px-4 py-2 text-xs text-slate-500 font-bold uppercase">Governance</div>
           <MenuButton icon="fa-balance-scale" label="Arbitration" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
           <MenuButton icon="fa-building" label="Enterprise" active={view === 'ENTERPRISE'} onClick={() => setView('ENTERPRISE')} />
+          
+          <div className="mt-2 px-4 py-2 text-xs text-slate-500 font-bold uppercase">System</div>
           <MenuButton icon="fa-leaf" label="Sustainability" active={view === 'SUSTAINABILITY'} onClick={() => setView('SUSTAINABILITY')} />
           <MenuButton icon="fa-cubes" label="Ecosystem" active={view === 'ECOSYSTEM'} onClick={() => setView('ECOSYSTEM')} />
           <MenuButton icon="fa-shield-alt" label="Audit & Security" active={view === 'AUDIT'} onClick={() => setView('AUDIT')} />
-          <MenuButton icon="fa-users" label={t('socialFi', currentLang)} active={view === 'SOCIAL'} onClick={() => setView('SOCIAL')} />
-          <MenuButton icon="fa-vault" label={t('vestingVault', currentLang)} active={view === 'VESTING'} onClick={() => setView('VESTING')} />
           
           {user.role === UserRole.SUPER_ADMIN && (
             <>
@@ -461,11 +477,9 @@ const App: React.FC = () => {
         {/* Mobile Navigation Bar */}
          <div className="md:hidden flex overflow-x-auto gap-2 p-2 bg-slate-900 border-b border-slate-800">
             <MobileNavButton icon="fa-home" active={view === 'DASHBOARD'} onClick={() => setView('DASHBOARD')} />
+            <MobileNavButton icon="fa-rocket" active={view === 'LGE'} onClick={() => setView('LGE')} color="text-neon-gold" />
             <MobileNavButton icon="fa-coins" active={view === 'DEFI'} onClick={() => setView('DEFI')} />
-            <MobileNavButton icon="fa-store" active={view === 'COMMERCE'} onClick={() => setView('COMMERCE')} />
             <MobileNavButton icon="fa-running" active={view === 'ARCHITEX_GO'} onClick={() => setView('ARCHITEX_GO')} />
-            <MobileNavButton icon="fa-balance-scale" active={view === 'ARBITRATION'} onClick={() => setView('ARBITRATION')} />
-            <MobileNavButton icon="fa-shield-alt" active={view === 'AUDIT'} onClick={() => setView('AUDIT')} />
             {user.role === UserRole.SUPER_ADMIN && (
               <MobileNavButton icon="fa-crown" active={view === 'GOD_MODE'} onClick={() => setView('GOD_MODE')} color="text-neon-gold" />
             )}
@@ -493,6 +507,7 @@ const App: React.FC = () => {
                    view === 'SUSTAINABILITY' ? 'Sustainability Hub' :
                    view === 'ECOSYSTEM' ? 'Ecosystem Hub' :
                    view === 'AUDIT' ? 'Audit & Security' :
+                   view === 'LGE' ? 'LGE Launchpad' :
                    t('dashboard', currentLang)}
                 </h2>
                 <p className="text-slate-400 text-sm">{t('welcome', currentLang)}, {user.username}.</p>

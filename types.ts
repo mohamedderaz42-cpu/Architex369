@@ -52,6 +52,7 @@ export interface User {
   companyName?: string; // Phase 9
   greenScore?: number; // Phase 10
   installedPlugins?: string[]; // Phase 11
+  hasBetaAccess?: boolean; // Phase 13
 }
 
 export interface SocialPost {
@@ -66,14 +67,14 @@ export interface SocialPost {
 
 export interface Transaction {
   id: string;
-  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET' | 'PLUGIN_PURCHASE' | 'BOUNTY_PAYOUT';
+  type: 'MINT' | 'BURN' | 'TRANSFER' | 'TIP' | 'SWAP' | 'STAKE' | 'UNSTAKE' | 'EXECUTE_PROPOSAL' | 'FEE_ROUTING' | 'REVENUE_DEPOSIT' | 'SUBSCRIBE' | 'COMMERCE_ESCROW' | 'COMMERCE_RELEASE' | 'INSURANCE_CLAIM' | 'GIG_PAYMENT' | 'GIG_FEE' | 'DISPUTE_RESOLUTION' | 'ARBITRATION_REWARD' | 'TENDER_DEPOSIT' | 'TENDER_PAYOUT' | 'CARBON_OFFSET' | 'PLUGIN_PURCHASE' | 'BOUNTY_PAYOUT' | 'LGE_CONTRIBUTION';
   amount: number;
   timestamp: number;
   status: 'PENDING' | 'COMPLETED' | 'FAILED';
   hash?: string;
 }
 
-export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY' | 'ECOSYSTEM' | 'AUDIT';
+export type ViewState = 'DASHBOARD' | 'SOCIAL' | 'VESTING' | 'GOD_MODE' | 'SETTINGS' | 'IOT' | 'DEFI' | 'COMMERCE' | 'ARCHITEX_GO' | 'ARBITRATION' | 'ENTERPRISE' | 'SUSTAINABILITY' | 'ECOSYSTEM' | 'AUDIT' | 'LGE';
 
 // --- Phase 1 Types ---
 
@@ -343,4 +344,15 @@ export interface BountySubmission {
   status: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'PAID';
   reward: number;
   timestamp: number;
+}
+
+// --- Phase 13: LGE ---
+
+export interface LGEStats {
+    raisedPi: number;
+    hardCapPi: number;
+    participants: number;
+    currentPeg: number; // USD value
+    status: 'PENDING' | 'ACTIVE' | 'COMPLETED';
+    endTime: number;
 }
